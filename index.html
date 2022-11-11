@@ -1,337 +1,367 @@
 <!doctype html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>送给阿玲</title>
- 
-    <style>
-        html, body {
- 
-            width: 500px;
-            height:300px;
-            left:50px;
-            top:30px;
-            margin: 100px 289px;
- 
-            background: #f6d8e2;
-        }
-        pp1{
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-        canvas {
-            position: absolute;
-            width: 1000px;
-            height: 500px;
-            left:135px;
-            top:50px;
-        }</style>
-    <link href="css/default.css" type="text/css" rel="stylesheet">
-    
-    <script language="javascript" type="text/javascript">
- 
-        // 18秒以后再跳转
-        setTimeout("javascript:location.href='./index.html'", 15000);
-		var charIndex = -1;
-		var stringLength = 0;
-		var inputText;
-		 
-		function writeContent(init) {
-		    if (init) {
-		        inputText = document.getElementById('contentToWrite').innerHTML;
-		    }
-		    if (charIndex == -1) {
-		        charIndex = 0;
-		        stringLength = inputText.length;
-		    }
-		    var initString = document.getElementById('myContent').innerHTML;
-		    initString = initString.replace(/<SPAN.*$/gi, "");
-		    var theChar = inputText.charAt(charIndex);
-		    var nextFourChars = inputText.substr(charIndex, 4);
-		    if (nextFourChars == '<BR>' || nextFourChars == '<br>') {
-		        theChar = '<BR>';
-		        charIndex += 3;
-		    }
-		    initString = initString + theChar + "<SPAN id='blink'>_</SPAN>";
-		    document.getElementById('myContent').innerHTML = initString;
-		    charIndex = charIndex / 1 + 1;
-		    if (charIndex % 2 == 1) {
-		        document.getElementById('blink').style.display = 'none';
-		    } else {
-		        document.getElementById('blink').style.display = 'inline';
-		    }
-		    if (charIndex <= stringLength) {
-		        setTimeout('writeContent(false)', 300);
-		    } else {
-		        blinkSpan();
-		    }
-		}
-		 
-		var currentStyle = 'inline';
-		 
-		function blinkSpan() {
-		    if (currentStyle == 'inline') {
-		        currentStyle = 'none';
-		    } else {
-		        currentStyle = 'inline';
-		    }
-		    document.getElementById('blink').style.display = currentStyle;
-		    setTimeout('blinkSpan()', 300);
-		}
-    </script>
- 
-</head>
- 
-<div id="myContent" ></div>
-<div id="contentToWrite" class="comments" style="display:none;">阿玲，你是个大可爱吧！</div>
-<div style="width: 150px;height: 150px;"><img src="https://haoshao-web.github.io/images/ling.jpg" style="width: 150px;height: 150px"/></div>
-<script type="text/javascript"> writeContent(true); </script>
-</body>
-<body>
- 
-<canvas id="pinkboard" >
-	
-	</canvas>
- 
-<script>
-    /*
-     * Settings
-     */
-    var settings = {
-        particles: {
-            length:   500, // maximum amount of particles
-            duration:   2, // particle duration in sec
-            velocity: 100, // particle velocity in pixels/sec
-            effect: -0.75, // play with this for a nice effect
-            size:      30, // particle size in pixels
-        },
-    };
- 
-    /*
-     * RequestAnimationFrame polyfill by Erik M?ller
-     */
-    (function(){var b=0;var c=["ms","moz","webkit","o"];for(var a=0;a<c.length&&!window.requestAnimationFrame;++a){window.requestAnimationFrame=window[c[a]+"RequestAnimationFrame"];window.cancelAnimationFrame=window[c[a]+"CancelAnimationFrame"]||window[c[a]+"CancelRequestAnimationFrame"]}if(!window.requestAnimationFrame){window.requestAnimationFrame=function(h,e){var d=new Date().getTime();var f=Math.max(0,16-(d-b));var g=window.setTimeout(function(){h(d+f)},f);b=d+f;return g}}if(!window.cancelAnimationFrame){window.cancelAnimationFrame=function(d){clearTimeout(d)}}}());
- 
-    /*
-     * Point class
-     */
-    var Point = (function() {
-        function Point(x, y) {
-            this.x = (typeof x !== 'undefined') ? x : 0;
-            this.y = (typeof y !== 'undefined') ? y : 0;
-        }
-        Point.prototype.clone = function() {
-            return new Point(this.x, this.y);
-        };
-        Point.prototype.length = function(length) {
-            if (typeof length == 'undefined')
-                return Math.sqrt(this.x * this.x + this.y * this.y);
-            this.normalize();
-            this.x *= length;
-            this.y *= length;
-            return this;
-        };
-        Point.prototype.normalize = function() {
-            var length = this.length();
-            this.x /= length;
-            this.y /= length;
-            return this;
-        };
-        return Point;
-    })();
- 
-    /*
-     * Particle class
-     */
-    var Particle = (function() {
-        function Particle() {
-            this.position = new Point();
-            this.velocity = new Point();
-            this.acceleration = new Point();
-            this.age = 0;
-        }
-        Particle.prototype.initialize = function(x, y, dx, dy) {
-            this.position.x = x;
-            this.position.y = y;
-            this.velocity.x = dx;
-            this.velocity.y = dy;
-            this.acceleration.x = dx * settings.particles.effect;
-            this.acceleration.y = dy * settings.particles.effect;
-            this.age = 0;
-        };
-        Particle.prototype.update = function(deltaTime) {
-            this.position.x += this.velocity.x * deltaTime;
-            this.position.y += this.velocity.y * deltaTime;
-            this.velocity.x += this.acceleration.x * deltaTime;
-            this.velocity.y += this.acceleration.y * deltaTime;
-            this.age += deltaTime;
-        };
-        Particle.prototype.draw = function(context, image) {
-            function ease(t) {
-                return (--t) * t * t + 1;
-            }
-            var size = image.width * ease(this.age / settings.particles.duration);
-            context.globalAlpha = 1 - this.age / settings.particles.duration;
-            context.drawImage(image, this.position.x - size / 2, this.position.y - size / 2, size, size);
-        };
-        return Particle;
-    })();
- 
-    /*
-     * ParticlePool class
-     */
-    var ParticlePool = (function() {
-        var particles,
-            firstActive = 0,
-            firstFree   = 0,
-            duration    = settings.particles.duration;
- 
-        function ParticlePool(length) {
-            // create and populate particle pool
-            particles = new Array(length);
-            for (var i = 0; i < particles.length; i++)
-                particles[i] = new Particle();
-        }
-        ParticlePool.prototype.add = function(x, y, dx, dy) {
-            particles[firstFree].initialize(x, y, dx, dy);
- 
-            // handle circular queue
-            firstFree++;
-            if (firstFree   == particles.length) firstFree   = 0;
-            if (firstActive == firstFree       ) firstActive++;
-            if (firstActive == particles.length) firstActive = 0;
-        };
-        ParticlePool.prototype.update = function(deltaTime) {
-            var i;
- 
-            // update active particles
-            if (firstActive < firstFree) {
-                for (i = firstActive; i < firstFree; i++)
-                    particles[i].update(deltaTime);
-            }
-            if (firstFree < firstActive) {
-                for (i = firstActive; i < particles.length; i++)
-                    particles[i].update(deltaTime);
-                for (i = 0; i < firstFree; i++)
-                    particles[i].update(deltaTime);
-            }
- 
-            // remove inactive particles
-            while (particles[firstActive].age >= duration && firstActive != firstFree) {
-                firstActive++;
-                if (firstActive == particles.length) firstActive = 0;
-            }
- 
- 
-        };
-        ParticlePool.prototype.draw = function(context, image) {
-            // draw active particles
-            if (firstActive < firstFree) {
-                for (i = firstActive; i < firstFree; i++)
-                    particles[i].draw(context, image);
-            }
-            if (firstFree < firstActive) {
-                for (i = firstActive; i < particles.length; i++)
-                    particles[i].draw(context, image);
-                for (i = 0; i < firstFree; i++)
-                    particles[i].draw(context, image);
-            }
-        };
-        return ParticlePool;
-    })();
- 
-    /*
-     * Putting it all together
-     */
-    (function(canvas) {
-        var context = canvas.getContext('2d'),
-            particles = new ParticlePool(settings.particles.length),
-            particleRate = settings.particles.length / settings.particles.duration, // particles/sec
-            time;
- 
-        // get point on heart with -PI <= t <= PI
-        function pointOnHeart(t) {
-            return new Point(
-                180 * Math.pow(Math.sin(t), 3),
-                160 * Math.cos(t) - 50 * Math.cos(2 * t) - 20 * Math.cos(3 * t) - 10 * Math.cos(4 * t) + 25
-            );
-        }
- 
-        // creating the particle image using a dummy canvas
-        var image = (function() {
-            var canvas  = document.createElement('canvas'),
-                context = canvas.getContext('2d');
-            canvas.width  = settings.particles.size;
-            canvas.height = settings.particles.size;
-            // helper function to create the path
-            function to(t) {
-                var point = pointOnHeart(t);
-                point.x = settings.particles.size / 2 + point.x * settings.particles.size / 350;
-                point.y = settings.particles.size / 2 - point.y * settings.particles.size / 350;
-                return point;
-            }
-            // create the path
-            context.beginPath();
-            var t = -Math.PI;
-            var point = to(t);
-            context.moveTo(point.x, point.y);
-            while (t < Math.PI) {
-                t += 0.01; // baby steps!
-                point = to(t);
-                context.lineTo(point.x, point.y);
-            }
-            context.closePath();
-            // create the fill
-            context.fillStyle = '#fa759f';
-            context.fill();
-            // create the image
-            var image = new Image();
-            image.src = canvas.toDataURL();
-            return image;
-        })();
- 
-        // render that thing!
-        function render() {
-            // next animation frame
-            requestAnimationFrame(render);
- 
-            // update time
-            var newTime   = new Date().getTime() / 1000,
-                deltaTime = newTime - (time || newTime);
-            time = newTime;
- 
-            // clear canvas
-            context.clearRect(0, 0, canvas.width, canvas.height);
- 
-            // create new particles
-            var amount = particleRate * deltaTime;
-            for (var i = 0; i < amount; i++) {
-                var pos = pointOnHeart(Math.PI - 2 * Math.PI * Math.random());
-                var dir = pos.clone().length(settings.particles.velocity);
-                particles.add(canvas.width / 2 + pos.x, canvas.height / 2 - pos.y, dir.x, -dir.y);
-            }
- 
-            // update and draw particles
-            particles.update(deltaTime);
-            particles.draw(context, image);
-        }
- 
-        // handle (re-)sizing of the canvas
-        function onResize() {
-            canvas.width  = canvas.clientWidth;
-            canvas.height = canvas.clientHeight;
-        }
-        window.onresize = onResize;
- 
-        // delay rendering bootstrap
-        setTimeout(function() {
-            onResize();
-            render();
-        }, 50);
-    })(document.getElementById('pinkboard'));</script>
- 
-</body>
- 
+<html class="x-admin-sm">
+    <head>
+        <meta charset="UTF-8">
+        <title>后台登录-X-admin2.2</title>
+        <meta name="renderer" content="webkit|ie-comp|ie-stand">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+        <meta http-equiv="Cache-Control" content="no-siteapp" />
+        <link rel="stylesheet" href="./css/font.css">
+        <link rel="stylesheet" href="./css/xadmin.css">
+        <!-- <link rel="stylesheet" href="./css/theme5.css"> -->
+        <script src="./lib/layui/layui.js" charset="utf-8"></script>
+        <script type="text/javascript" src="./js/xadmin.js"></script>
+        <!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+        <!--[if lt IE 9]>
+          <script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+          <script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+        <script>
+            // 是否开启刷新记忆tab功能
+            // var is_remember = false;
+        </script>
+    </head>
+    <body class="index">
+        <!-- 顶部开始 -->
+        <div class="container">
+            <div class="logo">
+                <a href="./index.html">X-admin v2.2</a></div>
+            <div class="left_open">
+                <a><i title="展开左侧栏" class="iconfont">&#xe699;</i></a>
+            </div>
+            <ul class="layui-nav left fast-add" lay-filter="">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">+新增</a>
+                    <dl class="layui-nav-child">
+                        <!-- 二级菜单 -->
+                        <dd>
+                            <a onclick="xadmin.open('最大化','http://www.baidu.com','','',true)">
+                                <i class="iconfont">&#xe6a2;</i>弹出最大化</a></dd>
+                        <dd>
+                            <a onclick="xadmin.open('弹出自动宽高','http://www.baidu.com')">
+                                <i class="iconfont">&#xe6a8;</i>弹出自动宽高</a></dd>
+                        <dd>
+                            <a onclick="xadmin.open('弹出指定宽高','http://www.baidu.com',500,300)">
+                                <i class="iconfont">&#xe6a8;</i>弹出指定宽高</a></dd>
+                        <dd>
+                            <a onclick="xadmin.add_tab('在tab打开','member-list.html')">
+                                <i class="iconfont">&#xe6b8;</i>在tab打开</a></dd>
+                        <dd>
+                            <a onclick="xadmin.add_tab('在tab打开刷新','member-del.html',true)">
+                                <i class="iconfont">&#xe6b8;</i>在tab打开刷新</a></dd>
+                    </dl>
+                </li>
+            </ul>
+            <ul class="layui-nav right" lay-filter="">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">admin</a>
+                    <dl class="layui-nav-child">
+                        <!-- 二级菜单 -->
+                        <dd>
+                            <a onclick="xadmin.open('个人信息','http://www.baidu.com')">个人信息</a></dd>
+                        <dd>
+                            <a onclick="xadmin.open('切换帐号','http://www.baidu.com')">切换帐号</a></dd>
+                        <dd>
+                            <a href="./login.html">退出</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item to-index">
+                    <a href="/">前台首页</a></li>
+            </ul>
+        </div>
+        <!-- 顶部结束 -->
+        <!-- 中部开始 -->
+        <!-- 左侧菜单开始 -->
+        <div class="left-nav">
+            <div id="side-nav">
+                <ul id="nav">
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="会员管理">&#xe6b8;</i>
+                            <cite>会员管理</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('统计页面','welcome1.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>统计页面</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('会员列表(静态表格)','member-list.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>会员列表(静态表格)</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('会员列表(动态表格)','member-list1.html',true)">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>会员列表(动态表格)</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('会员删除','member-del.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>会员删除</cite></a>
+                            </li>
+                            <li>
+                                <a href="javascript:;">
+                                    <i class="iconfont">&#xe70b;</i>
+                                    <cite>会员管理</cite>
+                                    <i class="iconfont nav_right">&#xe697;</i></a>
+                                <ul class="sub-menu">
+                                    <li>
+                                        <a onclick="xadmin.add_tab('会员删除','member-del.html')">
+                                            <i class="iconfont">&#xe6a7;</i>
+                                            <cite>会员删除</cite></a>
+                                    </li>
+                                    <li>
+                                        <a onclick="xadmin.add_tab('等级管理','member-list1.html')">
+                                            <i class="iconfont">&#xe6a7;</i>
+                                            <cite>等级管理</cite></a>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="订单管理">&#xe723;</i>
+                            <cite>订单管理</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('订单列表','order-list.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>订单列表</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('订单列表1','order-list1.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>订单列表1</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="分类管理">&#xe723;</i>
+                            <cite>分类管理</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('多级分类','cate.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>多级分类</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="城市联动">&#xe723;</i>
+                            <cite>城市联动</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('三级地区联动','city.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>三级地区联动</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="管理员管理">&#xe726;</i>
+                            <cite>管理员管理</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('管理员列表','admin-list.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>管理员列表</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('角色管理','admin-role.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>角色管理</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('权限分类','admin-cate.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>权限分类</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('权限管理','admin-rule.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>权限管理</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="系统统计">&#xe6ce;</i>
+                            <cite>系统统计</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('拆线图','echarts1.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>拆线图</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('拆线图','echarts2.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>拆线图</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('地图','echarts3.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>地图</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('饼图','echarts4.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>饼图</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('雷达图','echarts5.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>雷达图</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('k线图','echarts6.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>k线图</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('热力图','echarts7.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>热力图</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('仪表图','echarts8.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>仪表图</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="图标字体">&#xe6b4;</i>
+                            <cite>图标字体</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('图标对应字体','unicode.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>图标对应字体</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="其它页面">&#xe6b4;</i>
+                            <cite>其它页面</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a href="login.html" target="_blank">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>登录页面</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('错误页面','error.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>错误页面</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('示例页面','demo.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>示例页面</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('更新日志','log.html')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>更新日志</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a href="javascript:;">
+                            <i class="iconfont left-nav-li" lay-tips="第三方组件">&#xe6b4;</i>
+                            <cite>layui第三方组件</cite>
+                            <i class="iconfont nav_right">&#xe697;</i></a>
+                        <ul class="sub-menu">
+                            <li>
+                                <a onclick="xadmin.add_tab('滑块验证','https://fly.layui.com/extend/sliderVerify/')" target="">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>滑块验证</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('富文本编辑器','https://fly.layui.com/extend/layedit/')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>富文本编辑器</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('eleTree 树组件','https://fly.layui.com/extend/eleTree/')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>eleTree 树组件</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('图片截取','https://fly.layui.com/extend/croppers/')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>图片截取</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('formSelects 4.x 多选框','https://fly.layui.com/extend/formSelects/')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>formSelects 4.x 多选框</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('Magnifier 放大镜','https://fly.layui.com/extend/Magnifier/')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>Magnifier 放大镜</cite></a>
+                            </li>
+                            <li>
+                                <a onclick="xadmin.add_tab('notice 通知控件','https://fly.layui.com/extend/notice/')">
+                                    <i class="iconfont">&#xe6a7;</i>
+                                    <cite>notice 通知控件</cite></a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <!-- <div class="x-slide_left"></div> -->
+        <!-- 左侧菜单结束 -->
+        <!-- 右侧主体开始 -->
+        <div class="page-content">
+            <div class="layui-tab tab" lay-filter="xbs_tab" lay-allowclose="false">
+                <ul class="layui-tab-title">
+                    <li class="home">
+                        <i class="layui-icon">&#xe68e;</i>我的桌面</li></ul>
+                <div class="layui-unselect layui-form-select layui-form-selected" id="tab_right">
+                    <dl>
+                        <dd data-type="this">关闭当前</dd>
+                        <dd data-type="other">关闭其它</dd>
+                        <dd data-type="all">关闭全部</dd></dl>
+                </div>
+                <div class="layui-tab-content">
+                    <div class="layui-tab-item layui-show">
+                        <iframe src='./welcome.html' frameborder="0" scrolling="yes" class="x-iframe"></iframe>
+                    </div>
+                </div>
+                <div id="tab_show"></div>
+            </div>
+        </div>
+        <div class="page-content-bg"></div>
+        <style id="theme_style"></style>
+        <!-- 右侧主体结束 -->
+        <!-- 中部结束 -->
+        <script>//百度统计可去掉
+            var _hmt = _hmt || []; (function() {
+                var hm = document.createElement("script");
+                hm.src = "https://hm.baidu.com/hm.js?b393d153aeb26b46e9431fabaf0f6190";
+                var s = document.getElementsByTagName("script")[0];
+                s.parentNode.insertBefore(hm, s);
+            })();</script>
+    </body>
+
 </html>
- 
